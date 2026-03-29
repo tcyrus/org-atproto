@@ -1,0 +1,20 @@
+:PROPERTIES:
+:Collection: app.bsky.feed.post
+:END:
+
+This is an org mode test
+
+* 
+:PROPERTIES:
+:Type: app.bsky.embed.images
+:END:
+
+** 
+:PROPERTIES:
+:Width: 2080
+:Height: 2192
+:MimeType: image/webp
+:File: post.webp
+:END:
+
+An image of the document used to make this post.
