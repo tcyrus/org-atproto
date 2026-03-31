@@ -1,6 +1,7 @@
 import type { OrgData, Section as OrgSection } from "uniorg";
 import { parse } from "uniorg-parse/lib/parser";
-import type { ComAtprotoRepoCreateRecord } from "@atproto/api";
+
+import type { CreateRecord, EmbedOrgImage } from "./types";
 
 export async function readOrg(file: Blob): Promise<OrgData> {
   // uniorg-parse doesn't support CRLF or Streams as of now
@@ -10,27 +11,58 @@ export async function readOrg(file: Blob): Promise<OrgData> {
 }
 
 export function makeAtprotoRecord(
-  orgTree: OrgData,
-): ComAtprotoRepoCreateRecord.InputSchema {
-  // NOTE: there's a separate function handle blobs
-  const baseRecord: ComAtprotoRepoCreateRecord.InputSchema = {
-    repo: "",
-    collection: "",
-    record: {},
-  };
+  orgTree: OrgData | OrgSection,
+): CreateRecord {
+  // NOTE: This doesn't make a valid record because of embed files
+  // there's a separate function that handles uploading embed files as blobs
 
   const rootProps = orgTree.children.find(
     (el) => el.type === "property-drawer",
   )?.children;
 
-  baseRecord.collection =
-    rootProps?.find((el) => el.key === "Collection")?.value ?? "";
+  const collection =
+    rootProps?.find((el) => el.key.toUpperCase() === "COLLECTION")?.value ?? "";
 
-  baseRecord.record.createdAt =
+  let record: Record<string, unknown> = {};
+
+  switch (collection) {
+    case "app.bsky.feed.post":
+      record = makeBskyPostRecord(orgTree);
+      break;
+  }
+
+  return {
+    repo: "",
+    collection,
+    record,
+  };
+}
+
+export function makeBskyPostRecord(
+  orgTree: OrgData | OrgSection,
+): Record<string, unknown> {
+  const rootProps = orgTree.children.find(
+    (el) => el.type === "property-drawer",
+  )?.children;
+
+  const record: Record<string, unknown> = {};
+
+  record.createdAt =
     rootProps?.find((el) => el.key === "CreatedAt")?.value ??
     new Date().toISOString();
 
-  baseRecord.record.text = orgTree.children
+  // TODO: LANG
+
+  // TODO: REPLY_TO
+  // requires usage of the sdk to get the root post
+  // https://atproto.com/blog/create-post#replies
+
+  // TODO: handle facets (link, mention, tag)
+  // This requires overhauling the current text process
+  // Links shouldn't be hard, but embeds require extra logic
+  // Mentions and Tags would require a new syntax
+
+  record.text = orgTree.children
     .filter((el) => el.type === "paragraph")
     .map((el) => el.children)
     .flat()
@@ -41,55 +73,60 @@ export function makeAtprotoRecord(
 
   const sections = orgTree.children.filter((el) => el.type === "section");
 
-  if (baseRecord.collection === "app.bsky.feed.post") {
-    const embedSection = sections.find((el) =>
-      el.children
+  const embedSection = sections.find((el) =>
+    el.children
+      .find((el) => el.type === "property-drawer")
+      ?.children?.find((el) => el.key.toUpperCase() === "TYPE"),
+  );
+
+  if (embedSection !== undefined) {
+    const embed: Record<string, unknown> = {};
+
+    embed.$type =
+      embedSection.children
         .find((el) => el.type === "property-drawer")
-        ?.children?.find((el) => el.key === "Type"),
-    );
+        ?.children?.find((el) => el.key.toUpperCase() === "TYPE")?.value ?? "";
 
-    if (embedSection !== undefined) {
-      const embed: any = {};
-
-      embed.$type =
-        embedSection.children
-          .find((el) => el.type === "property-drawer")
-          ?.children?.find((el) => el.key === "Type")?.value ?? "";
-
-      // TODO: handle more embed types
-      if (embed.$type === "app.bsky.embed.images") {
+    // TODO: handle more embed types
+    switch (embed.$type) {
+      case "app.bsky.embed.images":
         embed.images = makeImageEmbed(embedSection);
-      }
-
-      baseRecord.record.embed = embed;
+        break;
     }
+
+    record.embed = embed;
   }
 
-  return baseRecord;
+  return record;
 }
 
-function makeImageEmbed(embedSection: OrgSection): any[] {
+function makeImageEmbed(embedSection: OrgSection): EmbedOrgImage[] {
+  // TODO: support standard org mode image linking
+
   return embedSection.children
     .filter((el) => el.type === "section")
     .map((el) => el.children)
     .map((el) => {
-      const img: any = {};
+      const img: EmbedOrgImage = { alt: "" };
       const properties = Object.fromEntries(
         el
           .find((el) => el.type === "property-drawer")
           ?.children?.map((el) => [el.key, el.value]) ?? [],
       );
+
       if (properties["Width"] && properties["Height"]) {
         const aspectRatio = {
           width: parseInt(properties["Width"]),
           height: parseInt(properties["Height"]),
         };
+
         if (!Object.values(aspectRatio).includes(Number.NaN)) {
           img.aspectRatio = aspectRatio;
         }
       }
 
-      // TODO: handle existing blobs
+      // TODO: switch to file links and cid links
+
       if (properties["File"]) {
         // NOTE: This not a valid record until the blob is uploaded
         // We're constructing a dummy field just so we can fill in the record
@@ -103,6 +140,10 @@ function makeImageEmbed(embedSection: OrgSection): any[] {
           type: properties["MimeType"],
         });
       }
+
+      // TODO: Use org mode CAPTION syntax
+
+      // TODO: Use ALT Block (BEGIN_CAPTION isn't supported by org mode)
 
       img.alt = el
         .filter((el) => el.type === "paragraph")

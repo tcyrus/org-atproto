@@ -1,10 +1,10 @@
 import { AtpAgent } from "@atproto/api";
 import type {
   Agent,
-  ComAtprotoRepoCreateRecord,
-  AppBskyFeedPost,
   AppBskyEmbedImages,
 } from "@atproto/api";
+
+import type { CreateRecord, EmbedImage, EmbedOrgImage, PostRecord } from "./types";
 
 export async function makeAtpAgent(
   identifier: string,
@@ -34,36 +34,18 @@ export async function makeAtpAgent(
 }
 
 export async function makeValidAtprotoRecord(
-  record: ComAtprotoRepoCreateRecord.InputSchema,
+  record: CreateRecord,
   agent: Agent,
   baseUrl?: URL,
-): Promise<ComAtprotoRepoCreateRecord.InputSchema> {
+): Promise<CreateRecord> {
+  // This code is extremely hacky
   if (record.collection === "app.bsky.feed.post") {
-    const postRecord = record.record as AppBskyFeedPost.Record;
+    const postRecord = record.record as PostRecord;
     const postEmbed = postRecord.embed;
     if (postEmbed?.$type === "app.bsky.embed.images") {
       const postImages = (postEmbed as AppBskyEmbedImages.Main).images;
       (postEmbed as AppBskyEmbedImages.Main).images = await Promise.all(
-        postImages.map(async (img) => {
-          const blob = (img as any).blob as
-            | { name: string; type?: string }
-            | undefined;
-
-          if (!img.image && blob) {
-            const fileUrl = new URL(blob.name, baseUrl);
-            const file = Bun.file(fileUrl, {
-              type: blob.type,
-            });
-
-            const { data } = await agent.uploadBlob(
-              file,
-              file.type ? { encoding: file.type } : undefined,
-            );
-
-            img.image = data.blob;
-          }
-          return img;
-        }),
+        postImages.map((img) => makeValidBskyEmbedImage(img, agent, baseUrl)),
       );
     }
   }
@@ -71,11 +53,39 @@ export async function makeValidAtprotoRecord(
   return record;
 }
 
+async function makeValidBskyEmbedImage(
+  img: EmbedOrgImage,
+  agent: Agent,
+  baseUrl?: URL,
+): Promise<EmbedImage> {
+  const blob = img.blob
+
+  if (!img.image && blob?.name) {
+    const fileUrl = new URL(blob.name, baseUrl);
+    const file = Bun.file(fileUrl, {
+      type: blob.type,
+    });
+
+    const { data } = await agent.uploadBlob(
+      file,
+      file.type ? { encoding: file.type } : undefined,
+    );
+
+    img.image = data.blob;
+  }
+
+  return img as EmbedImage;
+}
+
 export async function makePost(
-  record: ComAtprotoRepoCreateRecord.InputSchema,
+  record: CreateRecord,
   agent: Agent,
 ) {
   if (record.collection === "app.bsky.feed.post") {
-    return await agent.post(record.record as AppBskyFeedPost.Record);
+    return await agent.post(record.record as PostRecord);
   }
 }
+
+// TODO: get root record for REPLY_TO
+
+// TODO: get record (AT URI + CID) from url for Quotes and Replies

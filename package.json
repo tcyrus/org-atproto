@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "A hacky tool to create ATProto records via org mode",
+  "description": "A hacky tool to create atproto records via org mode",
   "license": "GPL-3.0-or-later",
   "files": [
     "dist"

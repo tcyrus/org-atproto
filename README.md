@@ -1,18 +1,16 @@
-# org-atproto
+# `org-atproto`
 
-A hacky tool to create ATProto records via org mode.
+A hacky tool to create atproto records via org mode.
 
 This was made to get around an issue with uploading images using the Bluesky App.
-
-I don't fully understand org mode, so there might be a better way to structure the document.
 
 The schema is inspired by [org-social](https://github.com/tanrax/org-social).
 
 ## Notes
 
-The type strictness for some parts of this project needs improvement. I wanted to get something working quickly instead of trying to wrangle with the types from the AT Proto SDK.
+This uses ([`uniorg-parse`](https://github.com/rasendubi/uniorg/tree/main/packages/uniorg-parse)) to parse org files, so some things might not work as well as it does in Emacs.
 
-The project currently uses some bun-specific APIs. These are done for performance reasons and are written in such a way that they can be replaced if necessary.
+The example post is in `sample`
 
 ## Development
 
