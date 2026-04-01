@@ -1,0 +1,33 @@
+* ~org-atproto~
+
+A hacky tool to create atproto records via org mode.
+
+The structure is inspired by [[https://github.com/tanrax/org-social][org-social]]
+
+Org files are currently being parsed using [[https://github.com/rasendubi/uniorg/tree/main/packages/uniorg-parse][~uniorg-parse~]].
+
+I might add support for [[https://github.com/jlumpe/ox-json][ox-json]] and / or JSONRPC to closer integrate with Emacs.
+
+This project currently uses Bun and TypeScript, but it would be nice to get as close to Emacs Lisp as possible while still working outside of the (maybe GNU Guile).
+
+The example post is [[file:sample/post.org]]
+
+** Development
+
+#+BEGIN_SRC shell
+# Run in dev mode
+bun run dev
+
+# Type-check
+bun run check:types
+
+# Build distribution output
+bun run build
+#+END_SRC
+
+** Usage
+
+#+BEGIN_SRC shell
+# Run the CLI
+org-atproto "post.org" -u "bsky.app" -p "password"
+#+END_SRC

@@ -2,12 +2,9 @@ import { Crust } from "@crustjs/core";
 import { helpPlugin } from "@crustjs/plugins";
 import pkg from "../package.json";
 
-import { makeAtprotoRecord, readOrg } from "./helpers/orgmode";
-import {
-  makeAtpAgent,
-  makePost,
-  makeValidAtprotoRecord,
-} from "./helpers/atproto";
+import { makeAtpAgent, readOrg, makePost } from "./helpers";
+import { makeAtprotoRecord } from "./core/atproto";
+import { makeOrgRecord } from "./core/uniorg";
 
 const cli = new Crust("org-atproto")
   .meta({ description: pkg.description })
@@ -46,20 +43,21 @@ const cli = new Crust("org-atproto")
 
     const orgData = await readOrg(orgFile);
 
-    const tmpRecord = makeAtprotoRecord(orgData);
+    const orgRecord = makeOrgRecord(orgData);
+
+    if (orgRecord === null) return;
 
     const agent = await makeAtpAgent(username, service, password);
 
-    const tmp2Record = await makeValidAtprotoRecord(tmpRecord, agent, orgUrl);
+    const atProtoRecord = await makeAtprotoRecord(orgRecord, agent, orgUrl);
 
-    console.dir(tmp2Record, { depth: null });
+    console.dir(atProtoRecord, { depth: null });
 
     // TODO: add a user check over here
+    return;
 
-    if (false) {
-      const post = await makePost(tmp2Record, agent);
-      console.dir(post, { depth: null });
-    }
+    const post = await makePost(atProtoRecord, agent);
+    console.dir(post, { depth: null });
   });
 
 await cli.execute();

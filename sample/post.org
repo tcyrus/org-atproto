@@ -1,20 +1,25 @@
-:PROPERTIES:
-:Collection: app.bsky.feed.post
-:END:
+#+LANGUAGE: en-US
+#+DATE: 2026-04-01T22:00:00.000Z
+#+PROPERTY: COLLECTION app.bsky.feed.post
+#+PROPERTY: REPLY_TO at://did:plc:mceibkdhjwzqecdxraou3wwn/app.bsky.feed.post/3mia5yrk2qr25
 
-This is an org mode test
+I've simplified the [[#orgmode]] structure.
+Repo is [[https://github.com/tcyrus/org-atproto][here]]
 
-* 
-:PROPERTIES:
-:Type: app.bsky.embed.images
-:END:
+#+BEGIN_EMBED
 
-** 
-:PROPERTIES:
-:Width: 2080
-:Height: 2192
-:MimeType: image/webp
-:File: post.webp
-:END:
+#+ATTR_ATPROTO: :type app.bsky.embed.images
+#+ATTR_HTML: :width 3568px :height 2732px
+#+CAPTION: An image of the document used to make this post.
+[[attachment:post.webp]]
 
-An image of the document used to make this post.
+#+ATTR_ATPROTO: :type app.bsky.embed.images
+#+ATTR_HTML: :width 2080px :height 2192px
+#+CAPTION: An image of the document used to make the quoted post.
+#+CAPTION: This format is no longer supported by org-atproto.
+[[cid:bafkreihegczpmz2mdwjaqov2myrspioqzol6ly45nnf4jwd57l64pn56hi]]
+
+#+ATTR_ATPROTO: :type app.bsky.embed.record
+[[at://did:plc:mceibkdhjwzqecdxraou3wwn/app.bsky.feed.post/3mia5yrk2qr25]]
+
+#+END_EMBED
