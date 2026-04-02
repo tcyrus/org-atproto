@@ -1,0 +1,30 @@
+* Notes
+
+** Bun
+
+The only dependency that requires Bun is ~@crustjs~. I haven't found a good alternative, but this can be abstracted away if / when JSONRPC is added.
+
+** Emacs
+
+It would be nice if the posting process could be run inside of Emacs, but I would also like to run the program outside of Emacs.
+
+*** JSONRPC
+
+Using JSONRPC means that the current code could be invoked from Emacs Lisp.
+This might require support for [[https://github.com/jlumpe/ox-json][ox-json]] inputs.
+
+*** Scheme (GNU Guile, Racket, etc)
+
+Rewriting parts of the application in Scheme would simplify integration with Emacs without making it a dependency.
+
+I don't know much about all the Lisp dialects, so I don't know which one of these has the most interop.
+
+These are the XRPC calls that should be implemented:
+- ~com.atproto.server.createSession~
+- ~com.atproto.server.deleteSession~ (optional)
+- ~com.atproto.repo.createRecord~
+- ~com.atproto.repo.getRecord~
+- ~com.atproto.repo.uploadBlob~
+- ~com.atproto.sync.getBlob~ (ideally with HTTP HEAD)
+
+[[https://framagit.org/prouby/guile-mastodon][guile-mastodon]] might be a good reference.

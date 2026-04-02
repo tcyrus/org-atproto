@@ -1,8 +1,13 @@
+import { pathToFileURL } from "node:url";
+import { openAsBlob } from "node:fs";
+
 import { Crust } from "@crustjs/core";
 import { helpPlugin } from "@crustjs/plugins";
+import { confirm } from "@clack/prompts";
+
 import pkg from "../package.json";
 
-import { makeAtpAgent, readOrg, makePost } from "./helpers";
+import { makeAtpAgent, readOrg, makePost, getPassword } from "./helpers";
 import { makeAtprotoRecord } from "./core/atproto";
 import { makeOrgRecord } from "./core/uniorg";
 
@@ -35,26 +40,46 @@ const cli = new Crust("org-atproto")
   })
   .run(async ({ args, flags }) => {
     const { file } = args;
-    const { service, username, password } = flags;
+    const { service, username } = flags;
 
-    const orgUrl = Bun.pathToFileURL(file);
+    const orgUrl = pathToFileURL(file);
 
-    const orgFile = Bun.file(orgUrl);
+    const orgFile = await openAsBlob(orgUrl);
 
     const orgData = await readOrg(orgFile);
 
     const orgRecord = makeOrgRecord(orgData);
 
+    console.dir(orgRecord, { depth: null });
+
     if (orgRecord === null) return;
 
-    const agent = await makeAtpAgent(username, service, password);
+    const shouldProceed = await confirm({
+      message: "Do you want to continue?",
+    });
+
+    if (shouldProceed !== true) return;
+
+    let { password } = flags;
+
+    if (!password) {
+      password = await getPassword(service, username);
+    }
+
+    // TODO: some parts of making the record don't require auth
+    // separate the auth and non auth parts
+
+    const agent = await makeAtpAgent(service, username, password);
 
     const atProtoRecord = await makeAtprotoRecord(orgRecord, agent, orgUrl);
 
     console.dir(atProtoRecord, { depth: null });
 
-    // TODO: add a user check over here
-    return;
+    const shouldPost = await confirm({
+      message: "Do you want to continue?",
+    });
+
+    if (shouldPost !== true) return;
 
     const post = await makePost(atProtoRecord, agent);
     console.dir(post, { depth: null });

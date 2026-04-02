@@ -1,30 +1,32 @@
 import type { Agent } from "@atproto/api";
-import { AtpAgent } from "@atproto/api";
+import { AtpAgent, CredentialSession } from "@atproto/api";
 import type { ComAtprotoRepoCreateRecord, AppBskyFeedPost } from "@atproto/api";
 
-export async function makeAtpAgent(
-  identifier: string,
+export async function makeCredSession(
   service: string,
+  identifier: string,
   password?: string,
-): Promise<AtpAgent> {
-  const agent = new AtpAgent({
-    service: service,
-  });
-
-  if (!password) {
-    password =
-      (await Bun.secrets.get({
-        service: service,
-        name: identifier,
-      })) || undefined;
-  }
+): Promise<CredentialSession> {
+  const session = new CredentialSession(new URL(service));
 
   if (password) {
-    await agent.login({
+    await session.login({
       identifier: identifier,
       password: password,
     });
   }
+
+  return session;
+}
+
+export async function makeAtpAgent(
+  service: string,
+  identifier: string,
+  password?: string,
+): Promise<AtpAgent> {
+  const agent = new AtpAgent(
+    await makeCredSession(identifier, service, password),
+  );
 
   return agent;
 }

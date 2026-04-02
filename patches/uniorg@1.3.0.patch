@@ -1,0 +1,13 @@
+diff --git a/lib/index.d.ts b/lib/index.d.ts
+index 4933dc34d6b9e628f5152099b32b79e7f529d0b2..1f38f3c581e1750aad6645e5b349468dc1d02cb2 100644
+--- a/lib/index.d.ts
++++ b/lib/index.d.ts
+@@ -66,7 +66,7 @@ export interface DiarySexp extends Node, WithAffiliatedKeywords {
+     /** Full Sexp */
+     value: string;
+ }
+-export interface Paragraph extends Element {
++export interface Paragraph extends Element, WithAffiliatedKeywords {
+     type: 'paragraph';
+     contentsBegin: number;
+     contentsEnd: number;

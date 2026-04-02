@@ -1,12 +1,13 @@
+import { openAsBlob } from "node:fs";
+
+import type { Agent, AppBskyFeedPost } from "@atproto/api";
+import type { ComAtprotoRepoCreateRecord } from "@atproto/api";
+
 import { AtUri } from "@atproto/syntax";
 import { parseCid } from "@atproto/lex-data";
 import { BlobRef } from "@atproto/lexicon";
 
-import type { Agent, AppBskyFeedPost } from "@atproto/api";
-import type { Cid } from "@atproto/lex-data";
 import type { OrgRecord, OrgPost } from "./types";
-
-import type { ComAtprotoRepoCreateRecord } from "@atproto/api";
 
 export async function makeAtprotoRecord(
   orgRecord: OrgRecord,
@@ -31,6 +32,7 @@ async function makeAtprotoPost(
   const reply = orgPost.reply
     ? await getReplyRefs(agent, new AtUri(orgPost.reply))
     : undefined;
+
   const facets = orgPost.facets.map((facet) => {
     let feature;
 
@@ -54,15 +56,16 @@ async function makeAtprotoPost(
     return {
       $type: "app.bsky.richtext.facet" as const,
       index: { byteStart: facet.byteStart, byteEnd: facet.byteEnd },
-      features: [feature],
+      features: feature ? [feature] : [],
     };
   });
 
   const recordEmbeds = orgPost.embeds.filter(
     (e) => e.$type === "app.bsky.embed.record",
   );
+
   if (recordEmbeds.length > 1) {
-    throw Error("can't have more than one record embed");
+    throw Error("Post can't have more than one record embed");
   }
 
   const _recordEmbed = recordEmbeds[0]
@@ -143,7 +146,8 @@ async function uploadEmbedImage(
   baseUrl?: URL,
 ) {
   const fileUrl = new URL(path, baseUrl);
-  const file = Bun.file(fileUrl, { type: mime });
+
+  const file = await openAsBlob(fileUrl, { type: mime });
 
   const { data } = await agent.uploadBlob(
     file,
