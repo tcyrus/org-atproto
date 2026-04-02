@@ -13,9 +13,7 @@
   },
   "scripts": {
     "dev": "bun run src/cli.ts",
-    "build": "bun build src/cli.ts --target bun --outfile dist/cli.js",
-    "prepack": "bun run build",
-    "start": "bun run dist/cli.js",
+    "build": "crust build",
     "check:types": "tsc --noEmit"
   },
   "dependencies": {

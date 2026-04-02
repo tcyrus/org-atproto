@@ -25,7 +25,7 @@ export async function makeAtpAgent(
   password?: string,
 ): Promise<AtpAgent> {
   const agent = new AtpAgent(
-    await makeCredSession(identifier, service, password),
+    await makeCredSession(service, identifier, password),
   );
 
   return agent;

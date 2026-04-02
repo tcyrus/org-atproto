@@ -66,9 +66,6 @@ const cli = new Crust("org-atproto")
       password = await getPassword(service, username);
     }
 
-    // TODO: some parts of making the record don't require auth
-    // separate the auth and non auth parts
-
     const agent = await makeAtpAgent(service, username, password);
 
     const atProtoRecord = await makeAtprotoRecord(orgRecord, agent, orgUrl);
@@ -76,7 +73,7 @@ const cli = new Crust("org-atproto")
     console.dir(atProtoRecord, { depth: null });
 
     const shouldPost = await confirm({
-      message: "Do you want to continue?",
+      message: "Do you want to create this record?",
     });
 
     if (shouldPost !== true) return;

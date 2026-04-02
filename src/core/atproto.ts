@@ -14,8 +14,11 @@ export async function makeAtprotoRecord(
   agent: Agent,
   baseUrl?: URL,
 ): Promise<ComAtprotoRepoCreateRecord.InputSchema> {
-  // TODO: get repo from agent
-  const record = { repo: "", collection: orgRecord.$type, record: {} };
+  const record = {
+    repo: agent.did ?? "",
+    collection: orgRecord.$type,
+    record: {},
+  };
 
   if (record.collection === "app.bsky.feed.post") {
     record.record = await makeAtprotoPost(orgRecord, agent, baseUrl);
@@ -213,7 +216,7 @@ async function getReplyRefs(agent: Agent, atUri: AtUri) {
 
   const root = replyRoot ?? parent;
 
-  // Example mentions one other call to getRecord, but I don't think it's necessary
+  // Example has another call to getRecord, but it doesn't seem necessary
   // https://atproto.com/blog/create-post#replies
 
   return { parent, root } as ReplyRef;
